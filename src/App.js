@@ -1,16 +1,18 @@
 import React from 'react';
 import './App.css';
-import { Hand } from 'react-deck-o-cards';
+import { Hand, Card, CardBack } from 'react-deck-o-cards';
 
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+import DealerCard from './DealerCard';
 
 const dealCard = ()=> ({
   rank: Math.floor( Math.random()*13 ) + 1,
   suit: Math.floor( Math.random()*4 ),
 });
 
-const handValue = hand=>{
+export const handValue1 = hand=>{
   let total = 0;
   let hasAce = false;
 
@@ -27,6 +29,17 @@ const handValue = hand=>{
 
   return total;
 };
+
+export const handValue = hand =>
+  hand.reduce(({ total, hasAce, t }, card)=> ({
+    hasAce: hasAce || (card.rank === 1),
+    total: (t = total + Math.min(card.rank, 10)),
+    finalTotal: ( hasAce && (t < 12) ) ? t + 10: t,
+  }), {
+    total: 0,
+    hasAce: false
+  }).finalTotal;
+
 
 const dealerAction = hand=> {
   let total = 0;
@@ -164,7 +177,7 @@ class App extends React.Component {
       // dealer hits.
       this.setState({
         dealerHand: nextDealerHand
-      }, ()=> setTimeout(()=> this.dealerHit(), 1000));
+      }, ()=> setTimeout(()=> this.dealerHit(), 3000 ));
     }
   }
 
@@ -175,9 +188,9 @@ class App extends React.Component {
         hand: [],
         dealerHand: [],
         hasPlayerStayed: false,
-      }), 3000);
+      }), 6000);
 
-    toast.error('YOU LOSE YOU LOSER');
+    setTimeout(()=> toast.error('YOU LOSE YOU LOSER'), 3000);
   }
 
   push = ()=> {
@@ -188,9 +201,9 @@ class App extends React.Component {
         hand: [],
         dealerHand: [],
         hasPlayerStayed: false,
-      }), 3000);
+      }), 6000);
 
-    toast.warn('that was close...');
+    setTimeout(()=> toast.warn('that was close...'), 3000);
   }
 
   win = ()=> {
@@ -201,9 +214,9 @@ class App extends React.Component {
         hand: [],
         dealerHand: [],
         hasPlayerStayed: false,
-      }), 3000);
+      }), 6000);
 
-    toast.info('I LIKE MONEY');
+    setTimeout(()=> toast.info('I LIKE MONEY'), 3000);
   }
 
   blackjack = ()=> {
@@ -214,9 +227,9 @@ class App extends React.Component {
         hand: [],
         dealerHand: [],
         hasPlayerStayed: false,
-      }), 3000);
+      }), 6000);
 
-    toast.success('BLACKJACK you loser');
+    setTimeout(()=> toast.success('BLACKJACK you loser'), 3000);
   }
 
   render() {
@@ -230,8 +243,15 @@ class App extends React.Component {
 
         <div className='wallet'>Wallet: ${this.state.wallet}</div>
         <div className='bet'>Current Bet: ${this.state.bet}</div>
-        <Hand cards={this.state.dealerHand}
-              hidden={false} style={defHandStyle} />
+        <div className='dealer-hand-container'>
+          {
+            this.state.dealerHand.map((card, i)=>(
+              <div key={i}>
+                <DealerCard key={i} card={card}/>
+              </div>
+            ))
+          }
+        </div>
         <Hand cards={this.state.hand}
               hidden={false} style={defHandStyle} />
 

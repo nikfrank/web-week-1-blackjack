@@ -31,3 +31,59 @@
     transform: rotate(360deg);
   }
 }
+
+.dealer-hand-container {
+  display: flex;
+}
+
+.dealer-hand-container > div {
+  flex-grow: 1;
+}
+
+.dealer-hand {
+  position: relative;
+  height: 30vh;
+}
+
+.dealer-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-height: 30vh;
+  min-height: 30vh;
+  padding: 0;
+}
+
+.rotated .dealer-card:first-child {
+  z-index: 200;
+}
+
+.dealer-hand > svg:first-child {
+  animation: spin-open 3s forwards;
+  z-index: 100;
+
+  transition: z-index 3s;
+}
+
+.dealer-hand > svg:last-child {
+  animation: spin-open-back 3s forwards;
+  z-index: 150;
+}
+
+@keyframes spin-open {
+  0% {
+    transform: rotate3d(0, 1, 0.125, 180deg);
+  }
+  100% {
+    transform: rotate3d(0, 1, 0.125, 0deg);
+  }
+}
+
+@keyframes spin-open-back {
+  0% {
+    transform: rotate3d(0, 1, 0.125, 180deg);
+  }
+  100% {
+    transform: rotate3d(0, 1, 0.125, 0deg);
+  }
+}
