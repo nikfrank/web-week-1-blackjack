@@ -88,7 +88,7 @@ class App extends React.Component {
   bet = ()=> {
     if( (this.state.bet === 0) &&
         (this.state.amountToBet >= MINIMUM_BET) &&
-        (this.state.wallet >= this.state.bet) )
+        (this.state.wallet >= this.state.amountToBet) )
       this.setState({
         wallet: this.state.wallet - this.state.amountToBet,
         bet: this.state.amountToBet,
