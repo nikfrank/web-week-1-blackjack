@@ -54,8 +54,9 @@ const dealerAction = hand=> {
     }
   }
 
-  // soft seventeen
-  if( hasAce && (total === 7) ) return 'hit';
+  // dealer hits on soft seventeen
+  const isSoftSeventeen = hasAce && (total === 7);
+  if( isSoftSeventeen ) return 'hit';
 
   if( hasAce && (total < 12) ) total += 10;
 
