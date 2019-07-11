@@ -1,14 +1,11 @@
 import React from 'react';
 import { Hand } from 'react-deck-o-cards';
 
-const defHandStyle = {
-  maxHeight:'34vh',
-  minHeight:'34vh',
-
-  maxWidth:'100vw',
-  padding: 0,
-};
-const MINIMUM_BET = 100;
+import {
+  handValue,
+  defHandStyle,
+  MINIMUM_BET
+} from './util';
 
 class Player extends React.Component {
 
@@ -34,7 +31,7 @@ class Player extends React.Component {
         <Hand cards={hand}
               hidden={false} style={defHandStyle} />
 
-        {((bet >= MINIMUM_BET)&&(!hasPlayerStayed)) ? (
+        {((bet >= MINIMUM_BET)&&(!hasPlayerStayed)&& (handValue(hand)<=21)) ? (
           <>
             <button onClick={()=> hit(pid)}>HIT</button>
             <button onClick={()=> stay(pid)}>STAY</button>

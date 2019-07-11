@@ -8,77 +8,18 @@ import 'react-toastify/dist/ReactToastify.css';
 import DealerCard from './DealerCard';
 import Player from './Player';
 
-const dealCard = ()=> ({
-  rank: Math.floor( Math.random()*13 ) + 1,
-  suit: Math.floor( Math.random()*4 ),
-});
-
-export const handValue1 = hand=>{
-  let total = 0;
-  let hasAce = false;
-
-  for(let i=0; i<(hand.length); i++){
-    if( hand[i].rank === 1 ) hasAce = true;
-    if(hand[i].rank > 10){
-      total += 10;
-    } else {
-      total += hand[i].rank;
-    }
-  }
-
-  if( hasAce && (total < 12) ) total += 10;
-
-  return total;
-};
-
-export const handValue = hand =>
-  hand.reduce(({ total, hasAce, t, ha }, card)=> ({
-    hasAce: (ha = (hasAce || (card.rank === 1))),
-    total: (t = total + Math.min(card.rank, 10)),
-    finalTotal: ( ha && (t < 12) ) ? t + 10: t,
-  }), {
-    total: 0,
-    hasAce: false
-  }).finalTotal;
-
-
-const dealerAction = hand=> {
-  let total = 0;
-  let hasAce = false;
-
-  for(let i=0; i<(hand.length); i++){
-    if( hand[i].rank === 1 ) hasAce = true;
-    if(hand[i].rank > 10){
-      total += 10;
-    } else {
-      total += hand[i].rank;
-    }
-  }
-
-  // dealer hits on soft seventeen
-  const isSoftSeventeen = hasAce && (total === 7);
-  if( isSoftSeventeen ) return 'hit';
-
-  if( hasAce && (total < 12) ) total += 10;
-
-  if( total >= 17 ) return 'stay';
-  else return 'hit';
-};
-
-
-const defHandStyle = {
-  maxHeight:'34vh',
-  minHeight:'34vh',
-
-  maxWidth:'100vw',
-  padding: 0,
-};
-
-const MINIMUM_BET = 100;
+import {
+  dealCard,
+  handValue,
+  dealerAction,
+  defHandStyle,
+  MINIMUM_BET
+} from './util';
 
 class App extends React.Component {
   state = {
     dealerHand: [],
+    dealerDone: false,
     players: [
       {
         hand: [],
@@ -86,14 +27,24 @@ class App extends React.Component {
         amountToBet: MINIMUM_BET,
         bet: 0,
         hasPlayerStayed: false,
-      }
+        doneHand: false,
+      },
+      {
+        hand: [],
+        wallet: 1000,
+        amountToBet: MINIMUM_BET,
+        bet: 0,
+        hasPlayerStayed: false,
+        doneHand: false,
+      },
     ],
   }
 
   bet = (pid)=> {
-    if( (this.state.players[pid].bet === 0) &&
+    if( !this.state.players[pid].doneHand &&
+        (this.state.players[pid].bet === 0) &&
         (this.state.players[pid].amountToBet >= MINIMUM_BET) &&
-        (this.state.players[pid].wallet >= this.state.players[pid].bet) )
+        (this.state.players[pid].wallet >= this.state.players[pid].amountToBet) )
 
       this.setState({
         players: this.state.players.map((player, i)=>
@@ -104,9 +55,16 @@ class App extends React.Component {
             hand: [dealCard(), dealCard()],
           })
         ),
-        dealerHand: (this.state.dealerHand.length) ?
-           this.state.dealerHand :
-           [dealCard()],
+      }, ()=> {
+        this.setState({
+          dealerHand: (this.state.dealerHand.length || (
+            !this.state.players.reduce((ready, player)=> {
+              return ready && (player.bet || (player.wallet < MINIMUM_BET));
+            }, true)
+          )) ?
+             this.state.dealerHand :
+             [dealCard()],
+        })
       });
   }
 
@@ -183,13 +141,13 @@ class App extends React.Component {
   }, ()=> {
     let allPlayersStayed = true;
     for(let i=0; i<(this.state.players.length); i++){
-      if( !this.state.players[i].hasPlayerStayed ){
+      if( !this.state.players[i].hasPlayerStayed && this.state.players[i].bet){
         allPlayersStayed = false;
       }
     }
 
     const allPlayersDone = this.state.players.reduce((done, player)=>{
-      return done && player.hasPlayerStayed;
+      return done && player.hasPlayerStayed && player.bet;
     }, true);
 
     if( allPlayersStayed ) this.dealerHit();
@@ -223,11 +181,12 @@ class App extends React.Component {
           } else {
             this.win(i);
           }
-        } else console.error('this code should not run');
+        } else console.log('this code should not run', this.state.players[i]);
       }
 
       this.setState({
-        dealerHand: nextDealerHand
+        dealerHand: nextDealerHand,
+        dealerDone: true,
       });
     } else {
       // dealer hits.
@@ -246,6 +205,7 @@ class App extends React.Component {
            bet: 0,
            hand: [],
            hasPlayerStayed: false,
+           doneHand: true,
          })
        )
      }, this.checkIfEveryoneDone), 6000);
@@ -263,6 +223,7 @@ class App extends React.Component {
             bet: 0,
             hand: [],
             hasPlayerStayed: false,
+            doneHand: true,
           })
         )
       }, this.checkIfEveryoneDone), 6000);
@@ -280,6 +241,7 @@ class App extends React.Component {
             bet: 0,
             hand: [],
             hasPlayerStayed: false,
+            doneHand: true,
           })
         )
       }, this.checkIfEveryoneDone), 6000);
@@ -297,6 +259,7 @@ class App extends React.Component {
             bet: 0,
             hand: [],
             hasPlayerStayed: false,
+            doneHand: true,
           })
         )
       }, this.checkIfEveryoneDone), 6000);
@@ -311,7 +274,19 @@ class App extends React.Component {
 
     if( allPlayersReset ) this.setState({
       dealerHand: [],
+      dealerDone: false,
+      players: this.state.players.map((player, i)=> ({
+        ...player, doneHand: false,
+      }))
     });
+    else {
+      const allPlayersDone = this.state.players.reduce((done, player)=>{
+        return done && (player.hasPlayerStayed || (player.bet === 0));
+      }, true);
+
+      if( allPlayersDone && !this.state.dealerDone ) this.dealerHit();
+    }
+
   }
 
   render() {
@@ -328,6 +303,14 @@ class App extends React.Component {
         </div>
         <Player {...this.state.players[0]}
                 pid={0}
+                betAmount={this.bet}
+                doubleDown={this.doubleDown}
+                stay={this.stay}
+                hit={this.hit}
+                allIn={this.allIn}
+                setAmount={this.setAmount} />
+        <Player {...this.state.players[1]}
+                pid={1}
                 betAmount={this.bet}
                 doubleDown={this.doubleDown}
                 stay={this.stay}

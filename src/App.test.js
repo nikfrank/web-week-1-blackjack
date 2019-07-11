@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import App, { handValue, handValue1 } from './App';
+import App from './App';
+import { handValue, handValue1 } from './util';
 
 it('renders without crashing', () => {
   const div = document.createElement('div');
